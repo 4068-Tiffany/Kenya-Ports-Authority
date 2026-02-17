@@ -1,0 +1,5 @@
+[
+  {"name": "Mombasa Road", "delay": 9, "trucks": 1200},
+  {"name": "Southern Bypass", "delay": 4, "trucks": 700},
+  {"name": "Northern Corridor", "delay": 6, "trucks": 900}
+]

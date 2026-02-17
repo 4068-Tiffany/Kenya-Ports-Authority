@@ -1,0 +1,42 @@
+body.dark{
+background:#020611;
+color:#00ffcc;
+font-family:Orbitron, sans-serif;
+margin:0;
+}
+
+.topbar{
+background:black;
+padding:20px;
+text-align:center;
+font-size:28px;
+color:#00ffcc;
+border-bottom:2px solid #00ffcc;
+}
+
+.layout{
+display:grid;
+grid-template-columns:300px 1fr;
+height:90vh;
+}
+
+.panel{
+background:#03152a;
+padding:20px;
+border-right:1px solid #00ffcc;
+}
+
+.best{
+font-size:22px;
+margin-bottom:20px;
+}
+
+.ai{
+background:#061d35;
+padding:10px;
+margin:5px 0;
+}
+
+#map{
+height:100%;
+}

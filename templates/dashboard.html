@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Traffic Command</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='radar.css') }}">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+
+<body class="dark">
+
+<div class="topbar">
+🛰 TRAFFIC COMMAND CENTER
+<a href="/analytics" class="btn">Analytics</a>
+</div>
+
+<div class="layout">
+
+<div class="panel">
+
+<h2>BEST ROUTE</h2>
+<div class="best">{{best_route}}</div>
+
+<button onclick="recommend()">RECOMMEND ROUTE</button>
+
+<h3>AI STATUS</h3>
+{% for msg in ai_messages %}
+<div class="ai">{{msg}}</div>
+{% endfor %}
+
+<div class="radar"></div>
+
+</div>
+
+<div id="map"></div>
+
+</div>
+
+<script>
+var map = L.map('map').setView([-1.29,36.82],12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+opacity:0.5
+}).addTo(map);
+
+var roads = {{ roads|tojson }};
+
+for (var name in roads){
+
+    var r = roads[name];
+
+    var marker = L.circleMarker(r.coords,{
+        radius:12,
+        color:r.color,
+        fillColor:r.color,
+        fillOpacity:0.9
+    }).addTo(map).bindPopup(
+        name+"<br>Now: "+r.delay+" mins<br>30min: "+r.future
+    );
+
+    var car = L.circleMarker(r.coords,{
+        radius:6,
+        color:"white",
+        fillColor:"white",
+        fillOpacity:1
+    }).addTo(map);
+
+    moveCar(car,r.coords);
+}
+
+function moveCar(car,coords){
+    let lat = coords[0];
+    let lng = coords[1];
+
+    setInterval(function(){
+        lat += (Math.random()-0.5)*0.002;
+        lng += (Math.random()-0.5)*0.002;
+        car.setLatLng([lat,lng]);
+    },700);
+}
+
+function recommend(){
+    alert("Best route right now: {{best_route}}");
+}
+
+// live update
+setInterval(()=>{
+fetch("/api/routes")
+.then(r=>r.json())
+.then(data=>console.log("Live:",data));
+},5000);
+</script>
+
+</body>
+</html>
