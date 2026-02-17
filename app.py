@@ -1,40 +1,31 @@
 from flask import Flask, render_template, request, redirect, session
 import joblib
 import random
-import numpy as np
+import os
 
 app = Flask(__name__)
-app.secret_key = "traffic_secret"
+app.secret_key = os.getenv("SECRET_KEY", "traffic_secret")
 
-# LOAD MODEL
 model = joblib.load("kpa_congestion_model.pkl")
-
-# ===== ROAD FEATURES (INPUT TO MODEL) =====
-roads_features = {
-    "Mombasa Road":  [12,4,7,500,600,0.7,1,1,1,1],
-    "Southern Bypass":[20,6,8,200,700,0.2,1,1,1,1],
-    "Thika Road":[18,5,9,650,700,0.8,1,1,1,1],
-    "Likoni Road":[10,2,5,450,500,0.6,1,0,1,0]
-}
-
+# =========================
+# ROAD COORDINATES
+# =========================
 roads_coords = {
-    "Mombasa Road":[-1.319,36.927],
-    "Southern Bypass":[-1.334,36.763],
-    "Thika Road":[-1.25,36.85],
-    "Likoni Road":[-4.08,39.66]
+    "Mombasa Road": [-1.319, 36.927],
+    "Southern Bypass": [-1.334, 36.763],
+    "Thika Road": [-1.25, 36.85],
+    "Likoni Road": [-4.08, 39.66]
 }
 
-def generate_roads():
+# =========================
+# LIVE TRAFFIC GENERATOR
+# =========================
+def generate_live_data():
     roads = {}
 
-    for road, feats in roads_features.items():
-        X = np.array(feats).reshape(1,-1)
-
-        # AI prediction
-        pred = model.predict(X)[0]
-
-        # fake delay for realism
-        delay = random.randint(5,40)
+    for road in roads_coords:
+        delay = random.randint(5, 40)
+        vehicles = random.randint(50, 500)
 
         if delay < 15:
             color = "green"
@@ -45,33 +36,54 @@ def generate_roads():
 
         roads[road] = {
             "delay": delay,
+            "vehicles": vehicles,
             "color": color,
-            "coords": roads_coords[road],
-            "ai": int(pred)
+            "coords": roads_coords[road]
         }
 
     return roads
 
-# ===== ROUTES =====
-
-@app.route("/")
-def home():
-    return redirect("/login")
-
-@app.route("/login", methods=["GET","POST"])
+# =========================
+# LOGIN
+# =========================
+@app.route("/", methods=["GET","POST"])
 def login():
     if request.method == "POST":
         session["user"] = request.form["user"]
         return redirect("/dashboard")
     return render_template("login.html")
 
+# =========================
+# DASHBOARD
+# =========================
 @app.route("/dashboard")
 def dashboard():
-    roads = generate_roads()
+    roads = generate_live_data()
     best_route = min(roads, key=lambda r: roads[r]["delay"])
+
+    leaderboard = sorted(
+        [{"route":r,"score":100-roads[r]["delay"]} for r in roads],
+        key=lambda x: x["score"],
+        reverse=True
+    )
 
     return render_template(
         "dashboard.html",
+        roads=roads,
+        best_route=best_route,
+        leaderboard=leaderboard
+    )
+
+# =========================
+# PRESENTATION MODE
+# =========================
+@app.route("/presentation")
+def presentation():
+    roads = generate_live_data()
+    best_route = min(roads, key=lambda r: roads[r]["delay"])
+
+    return render_template(
+        "presentation.html",
         roads=roads,
         best_route=best_route
     )
