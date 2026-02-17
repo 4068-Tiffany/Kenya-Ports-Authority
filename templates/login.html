@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='nasa.css') }}">
 </head>
-<body class="login">
+<body style="background:url('{{ url_for('static', filename='bg.jpg') }}'); background-size:cover;">
 
-<div class="login-box">
-<h1>TRAFFIC AI</h1>
+<div style="text-align:center; margin-top:200px;">
+<h1>🚦 AI TRAFFIC CONTROL</h1>
 
 <form method="POST">
-<input name="user" placeholder="Operator name">
-<button>ENTER CONTROL CENTER</button>
+<input name="user" placeholder="Operator Name" required
+style="padding:15px;font-size:18px;">
+<br><br>
+<button style="padding:15px 40px;font-size:18px;">ENTER SYSTEM</button>
 </form>
-
 </div>
 
 </body>

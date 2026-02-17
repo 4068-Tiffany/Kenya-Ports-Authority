@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, redirect, session
 import joblib
 import random
 import numpy as np
@@ -6,11 +6,12 @@ import numpy as np
 app = Flask(__name__)
 app.secret_key = "traffic_secret"
 
+# LOAD MODEL
 model = joblib.load("kpa_congestion_model.pkl")
 
-# ===== ROAD FEATURES =====
+# ===== ROAD FEATURES (INPUT TO MODEL) =====
 roads_features = {
-    "Mombasa Road":[12,4,7,500,600,0.7,1,1,1,1],
+    "Mombasa Road":  [12,4,7,500,600,0.7,1,1,1,1],
     "Southern Bypass":[20,6,8,200,700,0.2,1,1,1,1],
     "Thika Road":[18,5,9,650,700,0.8,1,1,1,1],
     "Likoni Road":[10,2,5,450,500,0.6,1,0,1,0]
@@ -23,7 +24,36 @@ roads_coords = {
     "Likoni Road":[-4.08,39.66]
 }
 
-# ===== LOGIN =====
+def generate_roads():
+    roads = {}
+
+    for road, feats in roads_features.items():
+        X = np.array(feats).reshape(1,-1)
+
+        # AI prediction
+        pred = model.predict(X)[0]
+
+        # fake delay for realism
+        delay = random.randint(5,40)
+
+        if delay < 15:
+            color = "green"
+        elif delay < 25:
+            color = "orange"
+        else:
+            color = "red"
+
+        roads[road] = {
+            "delay": delay,
+            "color": color,
+            "coords": roads_coords[road],
+            "ai": int(pred)
+        }
+
+    return roads
+
+# ===== ROUTES =====
+
 @app.route("/")
 def home():
     return redirect("/login")
@@ -35,78 +65,16 @@ def login():
         return redirect("/dashboard")
     return render_template("login.html")
 
-# ===== DASHBOARD =====
 @app.route("/dashboard")
 def dashboard():
-
-    roads = {}
-    ai_messages = []
-
-    for road, features in roads_features.items():
-
-        X = np.array(features).reshape(1,-1)
-        pred = model.predict(X)[0]
-
-        delay = random.randint(5,40)
-        if pred == 1:
-            delay += 10
-
-        # 30-minute future prediction
-        future_delay = delay + random.randint(-5,15)
-
-        if delay < 15:
-            color = "#00ffcc"
-            status = "CLEAR"
-        elif delay < 25:
-            color = "#ffaa00"
-            status = "MODERATE"
-        else:
-            color = "#ff3b3b"
-            status = "CONGESTED"
-
-        roads[road] = {
-            "delay": delay,
-            "future": future_delay,
-            "color": color,
-            "coords": roads_coords[road]
-        }
-
-        ai_messages.append(f"{road}: {status}")
-
+    roads = generate_roads()
     best_route = min(roads, key=lambda r: roads[r]["delay"])
 
     return render_template(
         "dashboard.html",
         roads=roads,
-        best_route=best_route,
-        ai_messages=ai_messages
+        best_route=best_route
     )
-
-# ===== ROUTE API FOR LIVE UPDATE =====
-@app.route("/api/routes")
-def api_routes():
-
-    data = {}
-    for road in roads_features:
-
-        delay = random.randint(5,40)
-        data[road] = delay
-
-    return jsonify(data)
-
-# ===== ANALYTICS PAGE =====
-@app.route("/analytics")
-def analytics():
-
-    stats = []
-    for r in roads_features:
-        stats.append({
-            "road": r,
-            "avg_delay": random.randint(10,35),
-            "traffic": random.randint(200,900)
-        })
-
-    return render_template("analytics.html", stats=stats)
 
 if __name__ == "__main__":
     app.run(debug=True)

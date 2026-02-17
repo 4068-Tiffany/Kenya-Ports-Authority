@@ -1,37 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Traffic Command</title>
+<title>Traffic AI Control</title>
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='radar.css') }}">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 
-<body class="dark">
+<body>
 
-<div class="topbar">
-🛰 TRAFFIC COMMAND CENTER
-<a href="/analytics" class="btn">Analytics</a>
-</div>
+<div class="topbar">🚦 AI TRAFFIC COMMAND CENTER</div>
 
-<div class="layout">
+<div class="grid">
 
 <div class="panel">
 
 <h2>BEST ROUTE</h2>
 <div class="best">{{best_route}}</div>
 
-<button onclick="recommend()">RECOMMEND ROUTE</button>
+<h3>ROUTE STATUS</h3>
 
-<h3>AI STATUS</h3>
-{% for msg in ai_messages %}
-<div class="ai">{{msg}}</div>
+{% for name,data in roads.items() %}
+<div class="card {{data.color}}">
+<b>{{name}}</b><br>
+Delay: {{data.delay}} min<br>
+AI Prediction: {{data.ai}}
+</div>
 {% endfor %}
-
-<div class="radar"></div>
 
 </div>
 
@@ -39,28 +36,27 @@
 
 </div>
 
-<script>
-var map = L.map('map').setView([-1.29,36.82],12);
+<audio id="beep" src="{{ url_for('static', filename='beep.mp3') }}"></audio>
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-opacity:0.5
-}).addTo(map);
+<script>
+var map = L.map('map').setView([-1.28,36.82],11);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 var roads = {{ roads|tojson }};
 
 for (var name in roads){
-
     var r = roads[name];
 
-    var marker = L.circleMarker(r.coords,{
+    // ROAD MARKER
+    L.circleMarker(r.coords,{
         radius:12,
         color:r.color,
         fillColor:r.color,
         fillOpacity:0.9
-    }).addTo(map).bindPopup(
-        name+"<br>Now: "+r.delay+" mins<br>30min: "+r.future
-    );
+    }).addTo(map).bindPopup(name);
 
+    // CAR
     var car = L.circleMarker(r.coords,{
         radius:6,
         color:"white",
@@ -71,27 +67,28 @@ for (var name in roads){
     moveCar(car,r.coords);
 }
 
-function moveCar(car,coords){
+// 🚗 ANIMATION
+function moveCar(marker,coords){
     let lat = coords[0];
     let lng = coords[1];
 
     setInterval(function(){
         lat += (Math.random()-0.5)*0.002;
         lng += (Math.random()-0.5)*0.002;
-        car.setLatLng([lat,lng]);
-    },700);
+        marker.setLatLng([lat,lng]);
+    },500);
 }
 
-function recommend(){
-    alert("Best route right now: {{best_route}}");
-}
+// 🔊 SOUND
+setInterval(function(){
+    document.getElementById("beep").play();
+},8000);
 
-// live update
-setInterval(()=>{
-fetch("/api/routes")
-.then(r=>r.json())
-.then(data=>console.log("Live:",data));
-},5000);
+// AUTO REFRESH
+setTimeout(function(){
+    location.reload();
+},15000);
+
 </script>
 
 </body>
