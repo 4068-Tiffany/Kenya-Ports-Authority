@@ -1,34 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Traffic AI Control</title>
+<title>Traffic AI Control Center</title>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+body{
+margin:0;
+background:#050b14;
+color:#00ffe1;
+font-family:Orbitron, sans-serif;
+overflow:hidden;
+}
+
+.topbar{
+height:60px;
+background:#02070d;
+display:flex;
+align-items:center;
+padding:0 20px;
+font-size:22px;
+letter-spacing:3px;
+border-bottom:1px solid cyan;
+}
+
+.container{
+display:grid;
+grid-template-columns:350px 1fr;
+height:calc(100vh - 60px);
+}
+
+.sidebar{
+background:#02070d;
+padding:20px;
+border-right:1px solid cyan;
+}
+
+.card{
+background:#081521;
+padding:15px;
+margin-bottom:15px;
+border-left:6px solid;
+box-shadow:0 0 10px rgba(0,255,255,0.2);
+}
+
+.green{border-color:#00ff6a}
+.orange{border-color:#ffaa00}
+.red{border-color:#ff3b3b}
+
+.best{
+font-size:26px;
+margin:10px 0;
+color:#00ff6a;
+}
+
+#map{
+height:100%;
+width:100%;
+}
+
+.clock{
+margin-top:20px;
+font-size:16px;
+color:#0f0;
+}
+
+.leaderboard{
+margin-top:20px;
+}
+
+.leaderboard div{
+margin:5px 0;
+}
+</style>
 </head>
 
 <body>
 
-<div class="topbar">🚦 AI TRAFFIC COMMAND CENTER</div>
+<div class="topbar">
+  KPA AI TRAFFIC CONTROL CENTER
+</div>
 
-<div class="grid">
+<div class="container">
 
-<div class="panel">
+<div class="sidebar">
 
-<h2>BEST ROUTE</h2>
-<div class="best">{{best_route}}</div>
+<h3>BEST ROUTE</h3>
+<div class="best">{{ best_route }}</div>
 
 <h3>ROUTE STATUS</h3>
-
 {% for name,data in roads.items() %}
 <div class="card {{data.color}}">
 <b>{{name}}</b><br>
-Delay: {{data.delay}} min<br>
-AI Prediction: {{data.ai}}
+Delay: {{data.delay}} mins
 </div>
 {% endfor %}
+
+<div class="leaderboard">
+<h3>LEADERBOARD</h3>
+<div>🥇 {{ best_route }}</div>
+<div>🥈 Alternative Route</div>
+<div>🥉 Backup Route</div>
+</div>
+
+<div class="clock" id="clock"></div>
 
 </div>
 
@@ -36,59 +115,56 @@ AI Prediction: {{data.ai}}
 
 </div>
 
-<audio id="beep" src="{{ url_for('static', filename='beep.mp3') }}"></audio>
-
 <script>
-var map = L.map('map').setView([-1.28,36.82],11);
+/* LIVE CLOCK */
+setInterval(()=>{
+document.getElementById("clock").innerText =
+"System Time: " + new Date().toLocaleTimeString();
+},1000);
+
+/* MAP */
+var map = L.map('map').setView([-4.05,39.65],12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 var roads = {{ roads|tojson }};
 
-for (var name in roads){
-    var r = roads[name];
+for(let name in roads){
+let r = roads[name];
 
-    // ROAD MARKER
-    L.circleMarker(r.coords,{
-        radius:12,
-        color:r.color,
-        fillColor:r.color,
-        fillOpacity:0.9
-    }).addTo(map).bindPopup(name);
+L.circleMarker(r.coords,{
+radius:14,
+color:r.color,
+fillColor:r.color,
+fillOpacity:0.8
+}).addTo(map).bindPopup(name);
 
-    // CAR
-    var car = L.circleMarker(r.coords,{
-        radius:6,
-        color:"white",
-        fillColor:"white",
-        fillOpacity:1
-    }).addTo(map);
+/* CAR */
+let car = L.circleMarker(r.coords,{
+radius:6,
+color:"white",
+fillColor:"white",
+fillOpacity:1
+}).addTo(map);
 
-    moveCar(car,r.coords);
+animateCar(car,r.coords);
 }
 
-// 🚗 ANIMATION
-function moveCar(marker,coords){
-    let lat = coords[0];
-    let lng = coords[1];
+function animateCar(marker,coords){
+let lat = coords[0];
+let lng = coords[1];
 
-    setInterval(function(){
-        lat += (Math.random()-0.5)*0.002;
-        lng += (Math.random()-0.5)*0.002;
-        marker.setLatLng([lat,lng]);
-    },500);
+setInterval(()=>{
+lat += (Math.random()-0.5)*0.002;
+lng += (Math.random()-0.5)*0.002;
+marker.setLatLng([lat,lng]);
+},600);
 }
 
-// 🔊 SOUND
-setInterval(function(){
-    document.getElementById("beep").play();
-},8000);
-
-// AUTO REFRESH
-setTimeout(function(){
-    location.reload();
-},15000);
-
+/* AUTO REFRESH DATA */
+setInterval(()=>{
+location.reload();
+},10000);
 </script>
 
 </body>

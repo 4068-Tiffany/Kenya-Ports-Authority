@@ -1,0 +1,30 @@
+const canvas = document.getElementById("radar");
+const ctx = canvas.getContext("2d");
+
+canvas.width = 300;
+canvas.height = 300;
+
+let angle = 0;
+
+function draw(){
+ctx.clearRect(0,0,300,300);
+
+ctx.beginPath();
+ctx.arc(150,150,120,0,Math.PI*2);
+ctx.strokeStyle="lime";
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(150,150);
+ctx.lineTo(
+150 + 120*Math.cos(angle),
+150 + 120*Math.sin(angle)
+);
+ctx.strokeStyle="lime";
+ctx.stroke();
+
+angle += 0.05;
+requestAnimationFrame(draw);
+}
+
+draw();

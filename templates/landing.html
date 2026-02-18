@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Traffic AI Control</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+margin:0;
+font-family:Orbitron, sans-serif;
+background:black;
+color:#00ffe1;
+overflow:hidden;
+}
+
+/* ===== STARFIELD BACKGROUND ===== */
+.stars{
+position:fixed;
+width:100%;
+height:100%;
+background:black url("https://www.transparenttextures.com/patterns/stardust.png");
+animation:moveStars 120s linear infinite;
+}
+
+@keyframes moveStars{
+from{background-position:0 0}
+to{background-position:10000px 5000px}
+}
+
+/* ===== CENTER PANEL ===== */
+.center{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+/* TITLE */
+.title{
+font-size:70px;
+letter-spacing:6px;
+text-shadow:0 0 25px cyan;
+animation:glow 2s infinite alternate;
+}
+
+@keyframes glow{
+from{text-shadow:0 0 10px cyan}
+to{text-shadow:0 0 40px cyan}
+}
+
+.subtitle{
+margin-top:10px;
+font-size:20px;
+opacity:0.7;
+}
+
+/* BUTTON */
+.enter{
+margin-top:40px;
+padding:20px 50px;
+font-size:24px;
+background:transparent;
+border:2px solid #00ffe1;
+color:#00ffe1;
+cursor:pointer;
+transition:0.3s;
+}
+
+.enter:hover{
+background:#00ffe1;
+color:black;
+box-shadow:0 0 30px cyan;
+transform:scale(1.08);
+}
+
+/* RADAR */
+.radar{
+position:absolute;
+top:50%;
+left:50%;
+width:600px;
+height:600px;
+margin-left:-300px;
+margin-top:-300px;
+border-radius:50%;
+border:2px solid rgba(0,255,255,0.2);
+}
+
+.radar::before{
+content:"";
+position:absolute;
+width:100%;
+height:100%;
+border-radius:50%;
+border:2px solid rgba(0,255,255,0.1);
+animation:pulse 3s infinite;
+}
+
+@keyframes pulse{
+0%{transform:scale(1);opacity:0.5}
+100%{transform:scale(1.4);opacity:0}
+}
+
+.scanline{
+position:absolute;
+width:50%;
+height:2px;
+background:cyan;
+top:50%;
+left:50%;
+transform-origin:left center;
+animation:rotate 4s linear infinite;
+}
+
+@keyframes rotate{
+from{transform:rotate(0deg)}
+to{transform:rotate(360deg)}
+}
+
+/* BOOT TEXT */
+.boot{
+position:absolute;
+bottom:40px;
+left:40px;
+font-size:14px;
+color:#0f0;
+opacity:0.8;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="stars"></div>
+
+<div class="radar">
+<div class="scanline"></div>
+</div>
+
+<div class="center">
+<div class="title">TRAFFIC AI</div>
+<div class="subtitle">Nairobi & Port Control Intelligence</div>
+
+<form action="/login">
+<button class="enter">ENTER CONTROL ROOM</button>
+</form>
+</div>
+
+<div class="boot" id="bootText">
+Booting AI Core...
+</div>
+
+<audio autoplay loop>
+<source src="{{ url_for('static', filename='ambient.mp3') }}">
+</audio>
+
+<script>
+/* BOOT SEQUENCE TEXT */
+const lines = [
+"Booting AI Core...",
+"Loading congestion models...",
+"Connecting to satellite grid...",
+"Activating traffic radar...",
+"System ready."
+];
+
+let i = 0;
+setInterval(()=>{
+if(i < lines.length){
+document.getElementById("bootText").innerText = lines[i];
+i++;
+}
+},1500);
+</script>
+
+</body>
+</html>

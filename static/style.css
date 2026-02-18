@@ -1,63 +1,70 @@
 body{
-    margin:0;
-    font-family:Arial;
-    background:#050b18;
-    color:#00eaff;
+margin:0;
+font-family:Arial;
+background:#0b0f1a;
+color:white;
 }
 
-.topbar{
-    background:#020617;
-    padding:20px;
-    font-size:24px;
-    text-align:center;
-    border-bottom:2px solid #00eaff;
+.landing{
+background:url("/static/bg.jpg");
+background-size:cover;
+}
+
+.center{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+.enter{
+background:#00ffe0;
+padding:15px 30px;
+text-decoration:none;
+color:black;
+font-weight:bold;
+}
+
+.login{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.login-box{
+background:#111;
+padding:40px;
+}
+
+.dash .top{
+background:black;
+padding:15px;
+display:flex;
+justify-content:space-between;
 }
 
 .grid{
-    display:grid;
-    grid-template-columns:300px 1fr;
-    height:90vh;
+display:grid;
+grid-template-columns:350px 1fr;
+height:90vh;
 }
 
 .panel{
-    background:#020617;
-    padding:20px;
-}
-
-.best{
-    font-size:22px;
-    color:#00ff88;
-    margin-bottom:20px;
+background:#111;
+padding:20px;
 }
 
 .card{
-    padding:10px;
-    margin:10px 0;
-    border-radius:8px;
+padding:10px;
+margin:10px 0;
 }
 
-.green{background:#003d2f;}
-.orange{background:#5a3b00;}
-.red{background:#3d0000;}
+.green{background:#00ff99;}
+.orange{background:#ffa500;}
+.red{background:#ff3b3b;}
 
 #map{
-    height:100%;
-}
-
-/* radar */
-#map::after{
-    content:"";
-    position:absolute;
-    top:50%;
-    left:50%;
-    width:300px;
-    height:300px;
-    border:2px solid rgba(0,255,255,0.3);
-    border-radius:50%;
-    animation:radar 4s linear infinite;
-}
-
-@keyframes radar{
-    from{transform:rotate(0deg);}
-    to{transform:rotate(360deg);}
+height:100%;
 }

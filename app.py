@@ -1,15 +1,16 @@
-from flask import Flask, render_template, request, redirect, session
-import joblib
+from flask import Flask, render_template, request, redirect, session, url_for
 import random
-import os
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "traffic_secret")
+app.secret_key = "secret123"
 
-model = joblib.load("kpa_congestion_model.pkl")
-# =========================
-# ROAD COORDINATES
-# =========================
+# DEMO USERS
+users = {
+    "admin@mail.com": "1234",
+    "operator@mail.com": "pass"
+}
+
+# ROAD DATA
 roads_coords = {
     "Mombasa Road": [-1.319, 36.927],
     "Southern Bypass": [-1.334, 36.763],
@@ -17,15 +18,10 @@ roads_coords = {
     "Likoni Road": [-4.08, 39.66]
 }
 
-# =========================
-# LIVE TRAFFIC GENERATOR
-# =========================
-def generate_live_data():
+def generate_roads():
     roads = {}
-
-    for road in roads_coords:
+    for road, coords in roads_coords.items():
         delay = random.randint(5, 40)
-        vehicles = random.randint(50, 500)
 
         if delay < 15:
             color = "green"
@@ -36,57 +32,51 @@ def generate_live_data():
 
         roads[road] = {
             "delay": delay,
-            "vehicles": vehicles,
             "color": color,
-            "coords": roads_coords[road]
+            "coords": coords
         }
 
-    return roads
+    best = min(roads, key=lambda r: roads[r]["delay"])
+    return roads, best
 
-# =========================
-# LOGIN
-# =========================
-@app.route("/", methods=["GET","POST"])
+@app.route("/")
+def landing():
+    return render_template("landing.html")
+
+@app.route("/login", methods=["GET","POST"])
 def login():
-    if request.method == "POST":
-        session["user"] = request.form["user"]
-        return redirect("/dashboard")
-    return render_template("login.html")
+    error = None
 
-# =========================
-# DASHBOARD
-# =========================
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        if email in users and users[email] == password:
+            session["user"] = email
+            return redirect("/dashboard")
+        else:
+            error = "Invalid login"
+
+    return render_template("login.html", error=error)
+
 @app.route("/dashboard")
 def dashboard():
-    roads = generate_live_data()
-    best_route = min(roads, key=lambda r: roads[r]["delay"])
+    if "user" not in session:
+        return redirect("/login")
 
-    leaderboard = sorted(
-        [{"route":r,"score":100-roads[r]["delay"]} for r in roads],
-        key=lambda x: x["score"],
-        reverse=True
-    )
+    roads, best = generate_roads()
 
     return render_template(
         "dashboard.html",
         roads=roads,
-        best_route=best_route,
-        leaderboard=leaderboard
+        best_route=best,
+        user=session["user"]
     )
 
-# =========================
-# PRESENTATION MODE
-# =========================
-@app.route("/presentation")
-def presentation():
-    roads = generate_live_data()
-    best_route = min(roads, key=lambda r: roads[r]["delay"])
-
-    return render_template(
-        "presentation.html",
-        roads=roads,
-        best_route=best_route
-    )
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
 
 if __name__ == "__main__":
     app.run(debug=True)
