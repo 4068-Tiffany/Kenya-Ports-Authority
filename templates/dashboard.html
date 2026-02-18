@@ -3,7 +3,7 @@
 <head>
 <title>Traffic AI Control Center</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -11,70 +11,130 @@
 <style>
 body{
 margin:0;
-background:#050b14;
+background:radial-gradient(circle at center,#07121f,#02050a 70%);
 color:#00ffe1;
-font-family:Orbitron, sans-serif;
+font-family:Rajdhani, sans-serif;
 overflow:hidden;
 }
 
+/* TOP BAR */
 .topbar{
-height:60px;
+height:65px;
 background:#02070d;
 display:flex;
 align-items:center;
-padding:0 20px;
-font-size:22px;
+justify-content:space-between;
+padding:0 25px;
+font-family:Orbitron;
 letter-spacing:3px;
-border-bottom:1px solid cyan;
+font-size:20px;
+border-bottom:1px solid rgba(0,255,255,0.4);
+box-shadow:0 0 15px rgba(0,255,255,0.15);
 }
 
+.status-dot{
+width:10px;
+height:10px;
+background:#00ff6a;
+border-radius:50%;
+box-shadow:0 0 8px #00ff6a;
+margin-left:10px;
+}
+
+/* LAYOUT */
 .container{
 display:grid;
-grid-template-columns:350px 1fr;
-height:calc(100vh - 60px);
+grid-template-columns:360px 1fr;
+height:calc(100vh - 65px);
 }
 
+/* SIDEBAR */
 .sidebar{
-background:#02070d;
-padding:20px;
-border-right:1px solid cyan;
+background:rgba(0,10,20,0.9);
+padding:22px;
+border-right:1px solid rgba(0,255,255,0.25);
+backdrop-filter:blur(6px);
 }
 
+.section-title{
+font-family:Orbitron;
+font-size:14px;
+letter-spacing:2px;
+margin-top:10px;
+margin-bottom:10px;
+color:#7ffcff;
+}
+
+/* BEST ROUTE */
+.best{
+font-size:30px;
+color:#00ff6a;
+margin-bottom:18px;
+text-shadow:0 0 12px rgba(0,255,106,0.7);
+}
+
+/* ROUTE CARDS */
 .card{
-background:#081521;
-padding:15px;
-margin-bottom:15px;
-border-left:6px solid;
-box-shadow:0 0 10px rgba(0,255,255,0.2);
+background:#071421;
+padding:14px;
+margin-bottom:12px;
+border-left:5px solid;
+border-radius:6px;
+box-shadow:0 0 12px rgba(0,255,255,0.15);
+transition:0.3s;
+}
+
+.card:hover{
+transform:scale(1.03);
+box-shadow:0 0 18px rgba(0,255,255,0.4);
 }
 
 .green{border-color:#00ff6a}
 .orange{border-color:#ffaa00}
 .red{border-color:#ff3b3b}
 
-.best{
-font-size:26px;
-margin:10px 0;
-color:#00ff6a;
+/* CLOCK */
+.clock{
+margin-top:25px;
+font-size:15px;
+color:#00ffea;
+opacity:0.8;
 }
 
+/* LEADERBOARD */
+.leaderboard{
+margin-top:25px;
+background:#020912;
+padding:12px;
+border-radius:6px;
+box-shadow:0 0 12px rgba(0,255,255,0.15);
+}
+
+.leaderboard div{
+margin:6px 0;
+}
+
+/* MAP */
 #map{
 height:100%;
 width:100%;
 }
 
-.clock{
-margin-top:20px;
-font-size:16px;
-color:#0f0;
+/* RADAR PULSE */
+.radar{
+position:absolute;
+right:40px;
+bottom:40px;
+width:120px;
+height:120px;
+border:2px solid rgba(0,255,255,0.3);
+border-radius:50%;
+animation:pulse 2s infinite;
 }
 
-.leaderboard{
-margin-top:20px;
-}
-
-.leaderboard div{
-margin:5px 0;
+@keyframes pulse{
+0%{transform:scale(0.7);opacity:0.7}
+100%{transform:scale(1.4);opacity:0}
 }
 </style>
 </head>
@@ -82,17 +142,22 @@ margin:5px 0;
 <body>
 
 <div class="topbar">
-  KPA AI TRAFFIC CONTROL CENTER
+🚦 KPA AI TRAFFIC COMMAND
+<div style="display:flex;align-items:center;">
+SYSTEM ONLINE
+<div class="status-dot"></div>
+</div>
 </div>
 
 <div class="container">
 
 <div class="sidebar">
 
-<h3>BEST ROUTE</h3>
+<div class="section-title">BEST ROUTE</div>
 <div class="best">{{ best_route }}</div>
 
-<h3>ROUTE STATUS</h3>
+<div class="section-title">ROUTE STATUS</div>
+
 {% for name,data in roads.items() %}
 <div class="card {{data.color}}">
 <b>{{name}}</b><br>
@@ -101,10 +166,10 @@ Delay: {{data.delay}} mins
 {% endfor %}
 
 <div class="leaderboard">
-<h3>LEADERBOARD</h3>
+<div class="section-title">AI RANKING</div>
 <div>🥇 {{ best_route }}</div>
-<div>🥈 Alternative Route</div>
-<div>🥉 Backup Route</div>
+<div>🥈 Smart Alternative</div>
+<div>🥉 Backup Path</div>
 </div>
 
 <div class="clock" id="clock"></div>
@@ -115,8 +180,10 @@ Delay: {{data.delay}} mins
 
 </div>
 
+<div class="radar"></div>
+
 <script>
-/* LIVE CLOCK */
+/* CLOCK */
 setInterval(()=>{
 document.getElementById("clock").innerText =
 "System Time: " + new Date().toLocaleTimeString();
@@ -136,20 +203,20 @@ L.circleMarker(r.coords,{
 radius:14,
 color:r.color,
 fillColor:r.color,
-fillOpacity:0.8
-}).addTo(map).bindPopup(name);
+fillOpacity:0.9
+}).addTo(map).bindPopup("<b>"+name+"</b><br>Delay "+r.delay+" mins");
 
-/* CAR */
 let car = L.circleMarker(r.coords,{
 radius:6,
-color:"white",
-fillColor:"white",
+color:"#fff",
+fillColor:"#fff",
 fillOpacity:1
 }).addTo(map);
 
 animateCar(car,r.coords);
 }
 
+/* CAR ANIMATION */
 function animateCar(marker,coords){
 let lat = coords[0];
 let lng = coords[1];
@@ -158,10 +225,10 @@ setInterval(()=>{
 lat += (Math.random()-0.5)*0.002;
 lng += (Math.random()-0.5)*0.002;
 marker.setLatLng([lat,lng]);
-},600);
+},500);
 }
 
-/* AUTO REFRESH DATA */
+/* AUTO REFRESH */
 setInterval(()=>{
 location.reload();
 },10000);
