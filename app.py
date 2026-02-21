@@ -45,18 +45,22 @@ def generate_roads():
     best = min(roads, key=lambda r: roads[r]["score"])
     return roads, best
 
-@app.route("/")
-def login_page():
-    return render_template("login.html")
 
-@app.route("/login", methods=["POST"])
-def login_action():
-    email = request.form.get("email")
-    password = request.form.get("password")
-    if email in users and users[email] == password:
-        session["user"] = email
-        return redirect(url_for("dashboard"))
-    return "Invalid Credentials", 401
+@app.route("/")
+def landing():
+    # This shows the "Traffic AI" entry screen first
+    return render_template("landing.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        if email in users and users[email] == password:
+            session["user"] = email
+            return redirect(url_for("dashboard"))
+    # Shows the login screen after they click "Enter Control Room"
+    return render_template("login.html")
 
 @app.route("/dashboard")
 def dashboard():
@@ -64,6 +68,7 @@ def dashboard():
         return redirect(url_for("login"))
     roads, best = generate_roads()
     return render_template("dashboard.html", roads=roads, best_route=best, user=session["user"])
+
 
 if __name__ == "__main__":
     app.run(debug=True)
