@@ -22,7 +22,7 @@ body {
 
 /* --- LOGIN PAGE (CYBERPUNK) --- */
 .login-body {
-    background: #02050a url('https://i.imgur.com/Y7Br99Y.png') repeat;
+    background: #02050a;
     height: 100vh;
     display: flex;
     align-items: center;
