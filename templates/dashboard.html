@@ -1,238 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Traffic AI Control Center</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<style>
-body{
-margin:0;
-background:radial-gradient(circle at center,#07121f,#02050a 70%);
-color:#00ffe1;
-font-family:Rajdhani, sans-serif;
-overflow:hidden;
-}
-
-/* TOP BAR */
-.topbar{
-height:65px;
-background:#02070d;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 25px;
-font-family:Orbitron;
-letter-spacing:3px;
-font-size:20px;
-border-bottom:1px solid rgba(0,255,255,0.4);
-box-shadow:0 0 15px rgba(0,255,255,0.15);
-}
-
-.status-dot{
-width:10px;
-height:10px;
-background:#00ff6a;
-border-radius:50%;
-box-shadow:0 0 8px #00ff6a;
-margin-left:10px;
-}
-
-/* LAYOUT */
-.container{
-display:grid;
-grid-template-columns:360px 1fr;
-height:calc(100vh - 65px);
-}
-
-/* SIDEBAR */
-.sidebar{
-background:rgba(0,10,20,0.9);
-padding:22px;
-border-right:1px solid rgba(0,255,255,0.25);
-backdrop-filter:blur(6px);
-}
-
-.section-title{
-font-family:Orbitron;
-font-size:14px;
-letter-spacing:2px;
-margin-top:10px;
-margin-bottom:10px;
-color:#7ffcff;
-}
-
-/* BEST ROUTE */
-.best{
-font-size:30px;
-color:#00ff6a;
-margin-bottom:18px;
-text-shadow:0 0 12px rgba(0,255,106,0.7);
-}
-
-/* ROUTE CARDS */
-.card{
-background:#071421;
-padding:14px;
-margin-bottom:12px;
-border-left:5px solid;
-border-radius:6px;
-box-shadow:0 0 12px rgba(0,255,255,0.15);
-transition:0.3s;
-}
-
-.card:hover{
-transform:scale(1.03);
-box-shadow:0 0 18px rgba(0,255,255,0.4);
-}
-
-.green{border-color:#00ff6a}
-.orange{border-color:#ffaa00}
-.red{border-color:#ff3b3b}
-
-/* CLOCK */
-.clock{
-margin-top:25px;
-font-size:15px;
-color:#00ffea;
-opacity:0.8;
-}
-
-/* LEADERBOARD */
-.leaderboard{
-margin-top:25px;
-background:#020912;
-padding:12px;
-border-radius:6px;
-box-shadow:0 0 12px rgba(0,255,255,0.15);
-}
-
-.leaderboard div{
-margin:6px 0;
-}
-
-/* MAP */
-#map{
-height:100%;
-width:100%;
-}
-
-/* RADAR PULSE */
-.radar{
-position:absolute;
-right:40px;
-bottom:40px;
-width:120px;
-height:120px;
-border:2px solid rgba(0,255,255,0.3);
-border-radius:50%;
-animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-0%{transform:scale(0.7);opacity:0.7}
-100%{transform:scale(1.4);opacity:0}
-}
-</style>
+    <title>KPA Traffic Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Rajdhani&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
+    <div class="topbar">
+        🛰️ KPA AI TRAFFIC COMMAND
+        <div id="live-clock" style="color: #00ff6a; font-family: 'Orbitron'; font-size: 14px;">System Time: --:--:--</div>
+    </div>
 
-<div class="topbar">
-🚦 KPA AI TRAFFIC COMMAND
-<div style="display:flex;align-items:center;">
-SYSTEM ONLINE
-<div class="status-dot"></div>
-</div>
-</div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="section-title">SYSTEM MONITORING</div>
+            <div id="user-location-status" style="font-size: 14px; color: #00ffe1; margin-bottom: 10px;">
+                🛰️ Initializing GPS...
+            </div>
 
-<div class="container">
+            <div class="section-title">OPTIMAL ROUTE</div>
+            <div class="best">{{ best_route }}</div>
 
-<div class="sidebar">
+            <div class="section-title">INTELLIGENCE REPORT</div>
+            <ul class="route-list" style="color: #ffaa00;">
+                {% for info in roads[best_route]["explanation"] %}
+                    <li>{{ info }}</li>
+                {% endfor %}
+            </ul>
 
-<div class="section-title">BEST ROUTE</div>
-<div class="best">{{ best_route }}</div>
+            <div class="section-title">NAVIGATION STEPS</div>
+            <ul class="route-list">
+                {% for step in roads[best_route]["directions"] %}
+                    <li>{{ step }}</li>
+                {% endfor %}
+            </ul>
 
-<div class="section-title">ROUTE STATUS</div>
+            <div class="section-title">NETWORK STATUS</div>
+            {% for name, data in roads.items() %}
+                <div class="card {{ data.color }}">
+                    <strong>{{ name }}</strong><br>
+                    Delay: {{ data.delay }}m | {{ data.density }} Traffic
+                </div>
+            {% endfor %}
+        </div>
 
-{% for name,data in roads.items() %}
-<div class="card {{data.color}}">
-<b>{{name}}</b><br>
-Delay: {{data.delay}} mins
-</div>
-{% endfor %}
+        <div id="map"></div>
+    </div>
 
-<div class="leaderboard">
-<div class="section-title">AI RANKING</div>
-<div>🥇 {{ best_route }}</div>
-<div>🥈 Smart Alternative</div>
-<div>🥉 Backup Path</div>
-</div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        /* 1. THE CLOCK SCRIPT */
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = "System Time: " + now.toLocaleTimeString();
+        }, 1000);
 
-<div class="clock" id="clock"></div>
+        /* 2. THE MAP SCRIPT */
+        var map = L.map('map').setView([-1.28, 36.82], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-</div>
+        /* 3. THE GPS SCRIPT (SHOW WHERE YOU ARE NOW) */
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                
+                // Add your blue location dot
+                L.circleMarker([lat, lng], {
+                    radius: 10, color: '#007bff', fillColor: '#007bff', fillOpacity: 0.9
+                }).addTo(map).bindPopup("<b>Current location</b>").openPopup();
+                
+                // Update the text in the sidebar
+                document.getElementById('user-location-status').innerText = "🛰️ Signal Locked: " + lat.toFixed(4) + ", " + lng.toFixed(4);
+            }, function(error) {
+                document.getElementById('user-location-status').innerText = "🛰️ GPS Access Denied";
+            });
+        }
 
-<div id="map"></div>
+        /* 4. TRAFFIC DATA MARKERS */
+        var roadsData = {{ roads|tojson }};
+        for (let name in roadsData) {
+            let r = roadsData[name];
+            let dotColor = r.color === 'green' ? '#00ff6a' : r.color === 'orange' ? '#ffaa00' : '#ff3b3b';
+            L.circleMarker(r.coords, {
+                radius: 12, color: dotColor, fillColor: dotColor, fillOpacity: 0.8
+            }).addTo(map).bindPopup("<b>" + name + "</b><br>Delay: " + r.delay + " mins");
+        }
 
-</div>
-
-<div class="radar"></div>
-
-<script>
-/* CLOCK */
-setInterval(()=>{
-document.getElementById("clock").innerText =
-"System Time: " + new Date().toLocaleTimeString();
-},1000);
-
-/* MAP */
-var map = L.map('map').setView([-4.05,39.65],12);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-var roads = {{ roads|tojson }};
-
-for(let name in roads){
-let r = roads[name];
-
-L.circleMarker(r.coords,{
-radius:14,
-color:r.color,
-fillColor:r.color,
-fillOpacity:0.9
-}).addTo(map).bindPopup("<b>"+name+"</b><br>Delay "+r.delay+" mins");
-
-let car = L.circleMarker(r.coords,{
-radius:6,
-color:"#fff",
-fillColor:"#fff",
-fillOpacity:1
-}).addTo(map);
-
-animateCar(car,r.coords);
-}
-
-/* CAR ANIMATION */
-function animateCar(marker,coords){
-let lat = coords[0];
-let lng = coords[1];
-
-setInterval(()=>{
-lat += (Math.random()-0.5)*0.002;
-lng += (Math.random()-0.5)*0.002;
-marker.setLatLng([lat,lng]);
-},500);
-}
-
-/* AUTO REFRESH */
-setInterval(()=>{
-location.reload();
-},10000);
-</script>
-
+        // Auto-refresh data
+        setTimeout(() => { location.reload(); }, 30000);
+    </script>
 </body>
 </html>

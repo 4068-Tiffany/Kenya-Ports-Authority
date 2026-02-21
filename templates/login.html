@@ -1,25 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>NASA Traffic Control - Secure Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
+<body class="login-body">
+    <div class="stars"></div>
+    <div class="twinkling"></div>
 
-<body class="login">
+    <div class="login-container">
+        <div class="scanner-line"></div>
+        <div class="login-header">
+            <div class="nasa-logo">KPA</div>
+            <h1>TERMINAL ACCESS</h1>
+            <p class="blink">AUTHENTICATION REQUIRED</p>
+        </div>
 
-<div class="login-box">
-<h2>Operator Login</h2>
+        <form action="/login" method="POST" class="login-form">
+            <div class="input-group">
+                <label><span class="icon">👤</span> COMMANDER IDENT</label>
+                <input type="email" name="email" placeholder="admin@mail.com" required autocomplete="off">
+            </div>
+            
+            <div class="input-group">
+                <label><span class="icon">🔑</span> ENCRYPTION KEY</label>
+                <input type="password" name="password" placeholder="••••" required>
+            </div>
 
-<form method="POST">
-<input name="email" placeholder="Email">
-<input name="password" type="password" placeholder="Password">
-<button type="submit">LOGIN</button>
-</form>
-
-{% if error %}
-<p class="error">{{error}}</p>
-{% endif %}
-
-</div>
+            <button type="submit" class="launch-btn">
+                <span class="btn-text">INITIALIZE SYSTEM</span>
+                <div class="btn-glow"></div>
+            </button>
+        </form>
+        
+        <div class="security-footer">
+            <div class="encryption-tag">ENC: AES-256</div>
+            <div class="system-tag">LOC: MSA-HQ</div>
+        </div>
+    </div>
 </body>
 </html>
